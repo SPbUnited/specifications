@@ -1,0 +1,31 @@
+structures:
+  main:
+    bits: 8
+    ranges:
+      6-7:
+        name: M0
+        description:
+          Задание мотора с ID = 0
+      4-5:
+        name: M1
+        description:
+          Задание мотора с ID = 1
+      2-3:
+        name: M2
+        description:
+          Задание мотора с ID = 2
+      0-1:
+        name: M3
+        description:
+          Задание мотора с ID = 3
+      # 10-8:
+      #   name: affected_id
+      #   description: Идентификатор целевого устройства
+      #   values:
+      #     000: Широковещательное сообщение
+      #     " ID": "[001-101] - Драйвер с указанным ID"
+      #     11x: "[110-111] - Резерв"
+
+      # 7-0:
+      #   name: register_id
+      #   description: Адрес регистра [0..255]
