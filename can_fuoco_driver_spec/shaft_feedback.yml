@@ -1,0 +1,12 @@
+structures:
+  main:
+    bits: 8
+    ranges:
+      4-7:
+        name: SHAFT_VELOCITY
+        description:
+          Скорость поворота вала двигателя [rad/s]
+      0-3:
+        name: SHAFT_ANGLE
+        description:
+          Угол поворота вала [rad]
