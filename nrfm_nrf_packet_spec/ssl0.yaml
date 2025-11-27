@@ -1,0 +1,204 @@
+# structures:
+#   main:
+#     bits: 24
+#     ranges:
+#       7-0:
+#         name: velx
+
+old_format:
+  - main:
+      bits: 40
+      ranges:
+        32-39:
+          name: velx
+        31-24:
+          name: vely
+        23-16:
+          name: vely
+          depends-on: "2"
+          values:
+            0:
+              description: Угловая скорость
+              structure: angvel
+            1:
+              description: Угол поворота
+              structure: angle
+        15-12:
+          name: kicker_setting
+          description: Напряжение кикера
+        11-8:
+          name: dribbler_setting
+          description: Скорость дриблера
+        7:
+          name: "-"
+        6:
+          name: AF
+          description: Прямой автокик
+        5:
+          name: AU
+          description: Навесной автокик
+        4:
+          name: KF
+          description: Прямой удар
+        3:
+          name: KU
+          description: Навесной удар
+        2:
+          name: AS
+          description: "Переключение режима \nуправления рысканьем"
+        1:
+          name: DE
+          description: Дрибблер
+        0:
+          name: HE
+          description: Повышайка
+    angvel:
+      bits: 8
+      ranges:
+        0-7:
+          name: Угловая скорость
+    angle:
+      bits: 8
+      ranges:
+        0-7:
+          name: Угол поворота
+
+kicker_and_dribbler:
+  - main:
+      bits: 16
+      ranges:
+        0-3:
+          name: dribbler_setting
+          description: "Скорость дрибблера (0 = выключен)"
+        4-7:
+          name: kicker_setting
+          description: "Напряжение кикера (0 = выключен)"
+        8-10:
+          name: kicker_mode
+          description: Настройка режима работы кикера
+          values:
+            0: Отключен
+            1: Прямой удар
+            10: Навесной удар
+            11: Прямой автокик
+            100: Навесной автокик
+
+speed_control:
+  - main:
+      bits: 24
+      ranges:
+        0:
+          name: AS
+          description: Преключение режима управления рысканьем
+        1-7:
+          name: angular_velocity_or_angle
+          depends-on: 0
+          values:
+            0:
+              structure: ang_vel
+              description: #Угловая скорость
+            1:
+              structure: delta_angle
+              description: #Ошибка рысканья
+        8-15:
+          name: vely
+          description: "Скорость Y; fp1.4.3, no inf and NaN; [cm/sec]; [-480:480]"
+        
+        16-23:
+          name: velx
+          description: "Скорость X; fp1.4.3, no inf and NaN; [cm/sec]; [-480:480]"
+        
+    ang_vel:
+      bits: 7
+      ranges:
+        0-6:
+          name: angular_velocity
+          description: "fp1.3.3, no inf and NaN; [rad/s]; [-30:30]"
+    delta_angle:
+      bits: 7
+      ranges:
+        0-6:
+          name: delta_angle
+          description: "sint7; [pi/64 rad]"
+
+coordinate_control:
+  - main:
+      bits: 32
+      ranges:
+        24-27:
+          name: point_count
+          description: "Количество точек (1<=n<=5)"
+        28-31:
+          name: first_point_id
+          description: "Id первой точки в пакете (0<=id<=15)\nповторяются циклично"
+        0-11:
+          name: coory
+          description: "Координата Y точки; sint12; [cm]; [-2048:2047]"
+        12-23:
+          name: coorx
+          description: "Координата X точки; sint12; [cm]; [-2048:2047]"
+        0-23:
+          name: .
+          description: Параметры целевой точки. Повторяется n раз
+  - main:
+      bits: 24
+      ranges:
+        0-7:
+          name: angular_velocity_or_angle
+          description: "Угол рысканья в заданной точке; sint8; [pi/128 rad]"
+        8-15:
+          name: vely
+          description: "Скорость Y; fp1.4.3, no inf and NaN; [cm/sec]; [-480:480]"
+        
+        16-23:
+          name: velx
+          description: "Скорость X; fp1.4.3, no inf and NaN; [cm/sec]; [-480:480]"
+          
+        0-23:
+          name: .
+          description: "Параметры целевой точки. Повторяется n раз"
+
+global_coordinate:
+  - main:
+      bits: 32
+      ranges:
+        8-19:
+          name: coory
+          description: "Координата Y точки; sint12; [cm]; [-2048:2047]"
+        20-31:
+          name: coorx
+          description: "Координата X точки; sint12; [cm]; [-2048:2047]"
+        0-7:
+          name: angle
+          description: "Угол рысканья в заданной точке; sint8; [pi/128 rad]"
+
+cap_vel_and_accel:
+  - main:
+      bits: 16
+      ranges:
+        0-7:
+          name: accel_cap
+          description: "Ограничение ускорения; fp1.4.3, no inf and NaN; [2cm/sec^2]; [-480:480]"
+        8-15:
+          name: vel_cap
+          description: "Ограничение скорости; fp1.4.3, no inf no NaN; [cm/sec]; [-480:480]"
+
+debug_override:
+  - main:
+      bits: 32
+      ranges:
+        31:
+          name: CMD
+        30-0:
+          name: ABCD
+
+preamble:
+  - main:
+      bits: 8
+      ranges:
+        0-3:
+          name: robot_id
+          description: Адрес робота
+        4-7:
+          name: packet_type
+          description: Тип пакета
