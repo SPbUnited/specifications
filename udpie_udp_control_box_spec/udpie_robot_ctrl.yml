@@ -1,0 +1,56 @@
+structures:
+  main:
+    bits: 13
+    ranges:
+      0:
+        name: "01h"
+        description:
+          "0x01: Packet header"
+      1:
+        name: "ID"
+        description:
+          ROBOT_ID
+      2:
+        name: "Vx"
+        description:
+          speed_x
+      3:
+        name: "Vy"
+        description:
+          ROBOT_ID
+      4:
+        name: "Vw"
+        description:
+          ROBOT_ID
+      5:
+        name: "DR"
+        description:
+          ROBOT_ID
+      6:
+        name: "KV"
+        description:
+          ROBOT_ID
+      7:
+        name: "KU"
+        description:
+          ROBOT_ID
+      8:
+        name: "KD"
+        description:
+          ROBOT_ID
+      9:
+        name: "BP"
+        description:
+          ROBOT_ID
+      10:
+        name: "DE"
+        description:
+          ROBOT_ID
+      11:
+        name: "CE"
+        description:
+          ROBOT_ID
+      12:
+        name: "AK"
+        description:
+          ROBOT_ID
