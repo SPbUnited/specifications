@@ -1,5 +1,6 @@
 #import "@preview/rivet:0.3.0": schema, config
 #import "@preview/bytefield:0.0.7": *
+#import "@preview/treet:1.0.0": *
 
 #set page(flipped: false)
 
@@ -14,8 +15,7 @@
   schema.render(schema.load(data), width: width, config: config.config(force-descs-on-side: true))
 }
 
-= Спецификация пакетов для передачи данных по радиоканалу
-
+= NRFM: Спецификация пакетов для передачи данных по радиоканалу
 SPbUnited
 
 Общий формат пакета представлен ниже. Первый байт - преамбула, определяющая тип пакета. После идут полезные данные в соответствии со спецификацией.
@@ -52,6 +52,29 @@ SPbUnited
 
 == 5. `[cap_vel_and_accel]` Ограничение максимальной скорости и ускорения
 #render_packet("ssl0.yaml", "cap_vel_and_accel", 0)
+
+== 11. `[debug_override]` Служебные сообщения настройки
+
+Для передачи служебных сообщений регламентируется ряд форматов. Все они используют байты полезной нагрузки с 1 по 31, и их описание приведено ниже.
+
+Каждый элемент дерева показывает чему соответствуют байты с указанными номерами. Например:
+
+- `[1:0C]` говорит, что байт 1 равен значению `0x0C`,
+- `[3:REG_ID|4-6:PAYLOAD]` говрит, что байт 3 - соответствет значению `REG_ID`, байты 4-6 - значению `PAYLOAD`.
+
+`PREAMBLE [0:Ax, A - Packet ID (11), x - ROBOT_ID]`\
+// #tree-list[
+//   - `TARGET_DEVICE_ID [1:]`
+//     - `[00]`
+// ]
+#tree-list[
+  - `MOTHERBOARD [1:0A]`
+    - `CANFuoco payload format [2:REG_ID|3-11:PAYLOAD]`
+  - `CAN [1:0C]`
+    - `CANFuoco payload format [2:DRV_ID|3:REG_ID|4-12:PAYLOAD]`
+]
+
+#pagebreak()
 
 == Спецификация чисел с плавающей запятой
 

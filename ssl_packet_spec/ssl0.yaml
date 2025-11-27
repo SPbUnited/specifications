@@ -183,6 +183,15 @@ cap_vel_and_accel:
           name: vel_cap
           description: "Ограничение скорости; fp1.4.3, no inf no NaN; [cm/sec]; [-480:480]"
 
+debug_override:
+  - main:
+      bits: 32
+      ranges:
+        31:
+          name: CMD
+        30-0:
+          name: ABCD
+
 preamble:
   - main:
       bits: 8
