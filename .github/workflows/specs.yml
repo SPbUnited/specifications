@@ -38,7 +38,6 @@ jobs:
         run: |
           set -e
 
-          # здесь перечисляем проекты-спеки
           SPECS="canfuoco_can_driver_spec nrfm_nrf_packet_spec udpie_udp_control_box_spec"
           echo "SPECS=$SPECS" >> $GITHUB_ENV
 
@@ -46,7 +45,6 @@ jobs:
           AFTER="${{ github.sha }}"
 
           if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
-            # первый коммит в ветке
             changed_files=$(git diff --name-only HEAD^ HEAD || true)
           else
             changed_files=$(git diff --name-only "$BEFORE" "$AFTER" || true)
@@ -79,7 +77,6 @@ jobs:
         run: |
           set -e
 
-          # сюда сложим пары spec=version для последующих шагов
           : > .spec-versions
 
           for spec in $CHANGED_SPECS; do
@@ -116,7 +113,6 @@ jobs:
               --input spec_version="$version" \
               --input target=pdf
 
-            # кладём "актуальный" pdf в корень с предсказуемым именем
             root_pdf="spec_${spec}.pdf"
             cp "$out" "$root_pdf"
           done < "${SPEC_VERSIONS_FILE:-.spec-versions}"
@@ -129,7 +125,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # коммитим только версии и наши pdf
           git add */VERSION spec_*.pdf || true
 
           if git diff --cached --quiet; then
