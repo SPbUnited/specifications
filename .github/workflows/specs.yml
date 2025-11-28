@@ -148,7 +148,7 @@ jobs:
             [ -z "$spec" ] && continue
 
             tag="v${version}-${spec}"
-            title="${spec} v${version}"
+            title="v${version} ${spec}"
             body="Automated release for ${spec} v${version} (commit ${HEAD_SHA:-${GITHUB_SHA}})"
 
             pdf_name="v${version}-${spec}.pdf"
