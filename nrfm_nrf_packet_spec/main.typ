@@ -15,6 +15,8 @@
   schema.render(schema.load(data), width: width, config: config.config(force-descs-on-side: true))
 }
 
+#let spec-version = sys.inputs.spec_version ?? "dev"
+
 #title([NRFM: Спецификация пакетов для передачи данных по радиоканалу])
 
 #align(right)[

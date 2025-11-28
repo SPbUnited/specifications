@@ -5,6 +5,8 @@
   lang: "ru"
 )
 
+#let spec-version = sys.inputs.spec_version ?? "dev"
+
 #title([UDPie: Спецификация протокола обмена с коробкой управления])
 
 #align(right)[

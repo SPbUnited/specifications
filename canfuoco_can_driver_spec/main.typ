@@ -16,6 +16,8 @@
 
 #show "ФБ4": "FootBot4"
 
+#let spec-version = sys.inputs.spec_version ?? "dev"
+
 #title("CAN Fuoco: Спецификация протокола CAN для общения с драйверами моторов робота ФБ4")
 
 #align(right)[
