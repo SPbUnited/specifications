@@ -2,8 +2,6 @@
 #import "@preview/bytefield:0.0.7": *
 #import "@preview/treet:1.0.0": *
 
-#set page(flipped: false)
-
 #let get_packet(name, type, byte) = (
   "structures": yaml(name).at(type).at(byte)
 )
@@ -17,7 +15,14 @@
 
 #title([NRFM: Спецификация пакетов для передачи данных по радиоканалу])
 
+#let target       = sys.inputs.at("target", default: "pdf")
 #let spec_version = sys.inputs.at("spec_version", default: "dev")
+
+#if target != "html" {
+  #set page(
+    flipped: false,
+  )
+}
 
 #align(right)[
   v#spec_version

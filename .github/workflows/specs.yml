@@ -112,7 +112,9 @@ jobs:
             out="build/$pdf_name"
 
             echo "Compiling $spec -> $out (version $version)"
-            typst compile "$spec/main.typ" "$out" --input spec_version="$version"
+            typst compile "$spec/main.typ" "$out" \
+              --input spec_version="$version" \
+              --input target=pdf
 
             # кладём "актуальный" pdf в корень с предсказуемым именем
             root_pdf="spec_${spec}.pdf"
@@ -191,9 +193,9 @@ jobs:
 
             typst compile "$spec/main.typ" "public/$name/index.html" \
               --format html \
-              --input spec_version="$version"
+              --input spec_version="$version" \
+              --input target=html
 
-            # если есть свежий pdf в корне - кладём рядом
             root_pdf="spec_${spec}.pdf"
             if [ -f "$root_pdf" ]; then
               cp "$root_pdf" "public/$name/spec.pdf"
