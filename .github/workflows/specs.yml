@@ -105,7 +105,7 @@ jobs:
 
           while IFS='=' read -r spec version; do
             [ -z "$spec" ] && continue
-            pdf_name="${spec}-v${version}.pdf"
+            pdf_name="v${version}-${spec}.pdf"
             out="build/$pdf_name"
 
             echo "Compiling $spec -> $out (version $version)"
@@ -151,7 +151,7 @@ jobs:
             title="${spec} v${version}"
             body="Automated release for ${spec} v${version} (commit ${HEAD_SHA:-${GITHUB_SHA}})"
 
-            pdf_name="${spec}-v${version}.pdf"
+            pdf_name="v${version}-${spec}.pdf"
             pdf_path="build/$pdf_name"
 
             if [ ! -f "$pdf_path" ]; then
