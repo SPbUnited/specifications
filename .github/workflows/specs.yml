@@ -147,7 +147,7 @@ jobs:
           while IFS='=' read -r spec version; do
             [ -z "$spec" ] && continue
 
-            tag="${spec}-v${version}"
+            tag="v${version}-${spec}"
             title="${spec} v${version}"
             body="Automated release for ${spec} v${version} (commit ${HEAD_SHA:-${GITHUB_SHA}})"
 
