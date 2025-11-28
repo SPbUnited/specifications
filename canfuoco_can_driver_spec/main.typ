@@ -17,11 +17,9 @@
 #let target       = sys.inputs.at("target", default: "pdf")
 #let spec_version = sys.inputs.at("spec_version", default: "dev")
 
-#if target != "html" {
-  #set page(
-    numbering: "1",
-  )
-}
+#set page(
+  numbering: "1",
+) if target != "html"
 
 #align(right)[
   v#spec_version
