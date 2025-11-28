@@ -8,7 +8,7 @@ on:
 
 permissions:
   contents: write
-  pages: write 
+  pages: write
   id-token: write
 
 concurrency:
@@ -19,7 +19,6 @@ jobs:
   build-release-and-pages:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     runs-on: ubuntu-latest
-
     outputs:
       changed-specs: ${{ steps.detect.outputs.changed_specs }}
       has-changes: ${{ steps.detect.outputs.has_changes }}
@@ -33,13 +32,30 @@ jobs:
       - name: Setup Typst
         uses: typst-community/setup-typst@v4
 
+      - id: discover
+        name: Discover spec projects
+        run: |
+          set -e
+
+          SPECS=""
+
+          for dir in *_spec; do
+            if [ -d "$dir" ]; then
+              SPECS="$SPECS $dir"
+            fi
+          done
+
+          SPECS="${SPECS# }"
+
+          echo "Detected specs: $SPECS"
+
+          echo "SPECS=$SPECS" >> "$GITHUB_ENV"
+          echo "specs=$SPECS" >> "$GITHUB_OUTPUT"
+
       - id: detect
         name: Detect changed specs
         run: |
           set -e
-
-          SPECS="canfuoco_can_driver_spec nrfm_nrf_packet_spec udpie_udp_control_box_spec"
-          echo "SPECS=$SPECS" >> $GITHUB_ENV
 
           BEFORE="${{ github.event.before }}"
           AFTER="${{ github.sha }}"
@@ -63,13 +79,13 @@ jobs:
 
           if [ ${#changed_specs[@]} -eq 0 ]; then
             echo "No spec changes"
-            echo "changed_specs=" >> $GITHUB_OUTPUT
-            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "changed_specs=" >> "$GITHUB_OUTPUT"
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
           else
             echo "Specs changed: ${changed_specs[*]}"
-            echo "changed_specs=${changed_specs[*]}" >> $GITHUB_OUTPUT
-            echo "has_changes=true" >> $GITHUB_OUTPUT
-            echo "CHANGED_SPECS=${changed_specs[*]}" >> $GITHUB_ENV
+            echo "changed_specs=${changed_specs[*]}" >> "$GITHUB_OUTPUT"
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            echo "CHANGED_SPECS=${changed_specs[*]}" >> "$GITHUB_ENV"
           fi
 
       - name: Bump spec versions
@@ -86,7 +102,7 @@ jobs:
             fi
 
             old=$(cat "$file")
-            IFS='.' read -r major minor patch <<<"$old"
+            IFS='.' read -r major minor patch <<< "$old"
             patch=$((patch + 1))
             new="$major.$minor.$patch"
             echo "$new" > "$file"
@@ -95,7 +111,7 @@ jobs:
             echo "$spec=$new" >> .spec-versions
           done
 
-          echo "SPEC_VERSIONS_FILE=.spec-versions" >> $GITHUB_ENV
+          echo "SPEC_VERSIONS_FILE=.spec-versions" >> "$GITHUB_ENV"
 
       - name: Build PDFs for changed specs
         if: steps.detect.outputs.has_changes == 'true'
@@ -105,6 +121,7 @@ jobs:
 
           while IFS='=' read -r spec version; do
             [ -z "$spec" ] && continue
+
             pdf_name="v${version}-${spec}.pdf"
             out="build/$pdf_name"
 
@@ -135,7 +152,7 @@ jobs:
           fi
 
           HEAD_SHA=$(git rev-parse HEAD)
-          echo "HEAD_SHA=$HEAD_SHA" >> $GITHUB_ENV
+          echo "HEAD_SHA=$HEAD_SHA" >> "$GITHUB_ENV"
 
       - name: Create GitHub releases per spec
         if: steps.detect.outputs.has_changes == 'true'
@@ -197,7 +214,14 @@ jobs:
             fi
           done
 
-          cat > public/index.html << 'EOF'
+          list_items=""
+
+          for spec in $SPECS; do
+            list_items="$list_items
+              <li><a href=\"$spec/\">$spec</a> (<a href=\"$spec/spec.pdf\">PDF</a>)</li>"
+          done
+
+          cat > public/index.html << EOF
           <!doctype html>
           <html lang="en">
           <head>
@@ -206,10 +230,7 @@ jobs:
           </head>
           <body>
             <h1>Specifications</h1>
-            <ul>
-              <li><a href="canfuoco_can_driver_spec/">CAN driver spec</a> (<a href="canfuoco_can_driver_spec/spec.pdf">PDF</a>)</li>
-              <li><a href="nrfm_nrf_packet_spec/">NRFM packet spec</a> (<a href="nrfm_nrf_packet_spec/spec.pdf">PDF</a>)</li>
-              <li><a href="udpie_udp_control_box_spec/">UDP control box spec</a> (<a href="udpie_udp_control_box_spec/spec.pdf">PDF</a>)</li>
+            <ul>$list_items
             </ul>
           </body>
           </html>
@@ -228,7 +249,6 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
