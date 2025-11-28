@@ -5,12 +5,12 @@
   lang: "ru"
 )
 
-#let spec-version = sys.inputs.spec_version ?? "dev"
-
 #title([UDPie: Спецификация протокола обмена с коробкой управления])
 
+#let spec_version = sys.inputs.at("spec_version", default: "dev")
+
 #align(right)[
-  v0.1.1
+  v#spec_version
 ]
 
 Обмен с коробкой управления осуществляется посредством прямого подключения по UDP-сокету в симплексном режиме.
