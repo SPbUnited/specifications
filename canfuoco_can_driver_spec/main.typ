@@ -22,7 +22,7 @@
 ) if target != "html"
 
 #align(right)[
-  v#spec_version
+  v0.2.1
 ]
 
 #outline()
@@ -351,7 +351,7 @@ $
 #let data = csv("register_map.csv")
 
 #table(
-  columns: (auto, 2fr, 4fr),
+  columns: (auto, 3fr, 4fr),
   table.header([*\#*], [*Название поля*], [*Описание*]),
   ..data.flatten().map(str)
 )
