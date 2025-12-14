@@ -22,7 +22,7 @@
 ) if target != "html"
 
 #align(right)[
-  v0.2.1
+  v#spec_version
 ]
 
 #outline()
