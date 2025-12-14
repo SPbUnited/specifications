@@ -10,13 +10,16 @@
   lang: "ru"
 )
 
-#set page(
-  numbering: "1"
-)
-
 #show "ФБ4": "FootBot4"
 
 #title("CAN Fuoco: Спецификация протокола CAN для общения с драйверами моторов робота ФБ4")
+
+#let target       = sys.inputs.at("target", default: "pdf")
+#let spec_version = sys.inputs.at("spec_version", default: "dev")
+
+#set page(
+  numbering: "1",
+) if target != "html"
 
 #align(right)[
   v0.2.1

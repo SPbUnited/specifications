@@ -1,0 +1,255 @@
+name: Specs CI
+
+on:
+  push:
+    branches:
+      - main
+      - MAKE_CI
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build-release-and-pages:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+    outputs:
+      changed-specs: ${{ steps.detect.outputs.changed_specs }}
+      has-changes: ${{ steps.detect.outputs.has_changes }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Typst
+        uses: typst-community/setup-typst@v4
+
+      - id: discover
+        name: Discover spec projects
+        run: |
+          set -e
+
+          SPECS=""
+
+          for dir in *_spec; do
+            if [ -d "$dir" ]; then
+              SPECS="$SPECS $dir"
+            fi
+          done
+
+          SPECS="${SPECS# }"
+
+          echo "Detected specs: $SPECS"
+
+          echo "SPECS=$SPECS" >> "$GITHUB_ENV"
+          echo "specs=$SPECS" >> "$GITHUB_OUTPUT"
+
+      - id: detect
+        name: Detect changed specs
+        run: |
+          set -e
+
+          BEFORE="${{ github.event.before }}"
+          AFTER="${{ github.sha }}"
+
+          if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            changed_files=$(git diff --name-only HEAD^ HEAD || true)
+          else
+            changed_files=$(git diff --name-only "$BEFORE" "$AFTER" || true)
+          fi
+
+          echo "Changed files:"
+          echo "$changed_files"
+
+          changed_specs=()
+
+          for spec in $SPECS; do
+            if echo "$changed_files" | grep -q "^$spec/"; then
+              changed_specs+=("$spec")
+            fi
+          done
+
+          if [ ${#changed_specs[@]} -eq 0 ]; then
+            echo "No spec changes"
+            echo "changed_specs=" >> "$GITHUB_OUTPUT"
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Specs changed: ${changed_specs[*]}"
+            echo "changed_specs=${changed_specs[*]}" >> "$GITHUB_OUTPUT"
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            echo "CHANGED_SPECS=${changed_specs[*]}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Bump spec versions
+        if: steps.detect.outputs.has_changes == 'true'
+        run: |
+          set -e
+
+          : > .spec-versions
+
+          for spec in $CHANGED_SPECS; do
+            file="$spec/VERSION"
+            if [ ! -f "$file" ]; then
+              echo "0.1.0" > "$file"
+            fi
+
+            old=$(cat "$file")
+            IFS='.' read -r major minor patch <<< "$old"
+            patch=$((patch + 1))
+            new="$major.$minor.$patch"
+            echo "$new" > "$file"
+
+            echo "Bumped $spec: $old -> $new"
+            echo "$spec=$new" >> .spec-versions
+          done
+
+          echo "SPEC_VERSIONS_FILE=.spec-versions" >> "$GITHUB_ENV"
+
+      - name: Build PDFs for changed specs
+        if: steps.detect.outputs.has_changes == 'true'
+        run: |
+          set -e
+          mkdir -p build
+
+          while IFS='=' read -r spec version; do
+            [ -z "$spec" ] && continue
+
+            pdf_name="v${version}-${spec}.pdf"
+            out="build/$pdf_name"
+
+            echo "Compiling $spec -> $out (version $version)"
+            typst compile "$spec/main.typ" "$out" \
+              --input spec_version="$version" \
+              --input target=pdf
+
+            root_pdf="spec_${spec}.pdf"
+            cp "$out" "$root_pdf"
+          done < "${SPEC_VERSIONS_FILE:-.spec-versions}"
+
+      - name: Commit VERSION and root PDFs
+        if: steps.detect.outputs.has_changes == 'true'
+        run: |
+          set -e
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add */VERSION spec_*.pdf || true
+
+          if git diff --cached --quiet; then
+            echo "Nothing to commit"
+          else
+            git commit -m "chore(spec): bump spec versions and PDFs [skip ci]"
+            git push
+          fi
+
+          HEAD_SHA=$(git rev-parse HEAD)
+          echo "HEAD_SHA=$HEAD_SHA" >> "$GITHUB_ENV"
+
+      - name: Create GitHub releases per spec
+        if: steps.detect.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+
+          while IFS='=' read -r spec version; do
+            [ -z "$spec" ] && continue
+
+            tag="v${version}-${spec}"
+            title="v${version} ${spec}"
+            body="Automated release for ${spec} v${version} (commit ${HEAD_SHA:-${GITHUB_SHA}})"
+
+            pdf_name="v${version}-${spec}.pdf"
+            pdf_path="build/$pdf_name"
+
+            if [ ! -f "$pdf_path" ]; then
+              echo "PDF $pdf_path not found, skipping $spec"
+              continue
+            fi
+
+            echo "Creating release $tag with asset $pdf_path"
+
+            if gh release view "$tag" >/dev/null 2>&1; then
+              echo "Release $tag already exists, uploading asset"
+              gh release upload "$tag" "$pdf_path" --clobber
+            else
+              gh release create "$tag" "$pdf_path" \
+                --title "$title" \
+                --notes "$body" \
+                --target "${HEAD_SHA:-${GITHUB_SHA}}"
+            fi
+          done < "${SPEC_VERSIONS_FILE:-.spec-versions}"
+
+      - name: Build HTML site (all specs)
+        if: steps.detect.outputs.has_changes == 'true'
+        env:
+          TYPST_FEATURES: html
+        run: |
+          set -e
+          mkdir -p public
+
+          for spec in $SPECS; do
+            version=$(cat "$spec/VERSION" 2>/dev/null || echo "dev")
+            name="$spec"
+
+            mkdir -p "public/$name"
+
+            typst compile "$spec/main.typ" "public/$name/index.html" \
+              --format html \
+              --input spec_version="$version" \
+              --input target=html
+
+            root_pdf="spec_${spec}.pdf"
+            if [ -f "$root_pdf" ]; then
+              cp "$root_pdf" "public/$name/spec.pdf"
+            fi
+          done
+
+          list_items=""
+
+          for spec in $SPECS; do
+            list_items="$list_items
+              <li><a href=\"$spec/\">$spec</a> (<a href=\"$spec/spec.pdf\">PDF</a>)</li>"
+          done
+
+          cat > public/index.html << EOF
+          <!doctype html>
+          <html lang="en">
+          <head>
+            <meta charset="utf-8">
+            <title>Specifications</title>
+          </head>
+          <body>
+            <h1>Specifications</h1>
+            <ul>$list_items
+            </ul>
+          </body>
+          </html>
+          EOF
+
+      - name: Upload Pages artifact
+        if: steps.detect.outputs.has_changes == 'true'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: public
+
+  deploy:
+    needs: build-release-and-pages
+    if: needs.build-release-and-pages.outputs.has-changes == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
