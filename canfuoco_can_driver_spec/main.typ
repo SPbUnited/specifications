@@ -19,7 +19,7 @@
 #title("CAN Fuoco: Спецификация протокола CAN для общения с драйверами моторов робота ФБ4")
 
 #align(right)[
-  v0.1.0
+  v0.2.0
 ]
 
 #outline()
@@ -348,7 +348,7 @@ $
 #let data = csv("register_map.csv")
 
 #table(
-  columns: (auto, 2fr, 4fr),
+  columns: (auto, 3fr, 4fr),
   table.header([*\#*], [*Название поля*], [*Описание*]),
   ..data.flatten().map(str)
 )
