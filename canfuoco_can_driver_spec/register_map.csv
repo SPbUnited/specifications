@@ -94,7 +94,7 @@ enum MotionControlType : uint8_t {
 -,-,-
 58,P_ANGLE_P [rw] [fFLOAT32],
 59,P_ANGLE_LIMIT [rw] [FLOAT32],
-60,LPF_ANGLE [rw] [fFLOAT32],
+60,LPF_ANGLE_TF [rw] [fFLOAT32],
 -,,
 61,MOTION_DOWNSAMPLE [rw] [UINT32],
 62,MOTION_CNT [rw] [UINT32],
