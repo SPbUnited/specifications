@@ -2,6 +2,13 @@
 #import "@preview/bytefield:0.0.7": *
 #import "@preview/treet:1.0.0": *
 
+#let target       = sys.inputs.at("target", default: "pdf")
+#let spec_version = sys.inputs.at("spec_version", default: "dev")
+
+#set page(
+  flipped: false,
+) if target != "html"
+
 #let get_packet(name, type, byte) = (
   "structures": yaml(name).at(type).at(byte)
 )
@@ -14,13 +21,6 @@
 }
 
 #title([NRFM: Спецификация пакетов для передачи данных по радиоканалу])
-
-#let target       = sys.inputs.at("target", default: "pdf")
-#let spec_version = sys.inputs.at("spec_version", default: "dev")
-
-#set page(
-  flipped: false,
-) if target != "html"
 
 #align(right)[
   v#spec_version
@@ -41,29 +41,29 @@ SPbUnited
 
 #render_packet("ssl0.yaml", "preamble", 0, width: 50%)
 
-== 0. `[old_format]` Пакет старого формата 
+== 0. `[0x0: old_format]` Пакет старого формата 
 
 #render_packet("ssl0.yaml", "old_format", 0)
 
-== 1. `[kicker_and_dribbler]` Настройка параметров кикера и дриблера 
+== 1. `[0x1: kicker_and_dribbler]` Настройка параметров кикера и дриблера 
 
 #render_packet("ssl0.yaml", "kicker_and_dribbler", 0)
 
-== 2. `[speed_control] Выдача задания по скорости`
+== 2. `[0x2: speed_control] Выдача задания по скорости`
 #render_packet("ssl0.yaml", "speed_control", 0)
 
-== 3. `[coordinate_control]` Управление по координатам
+== 3. `[0x3: coordinate_control]` Управление по координатам
 #render_packet("ssl0.yaml", "coordinate_control", 0)
 #render_packet("ssl0.yaml", "coordinate_control", 1, width: 80%)
 
-== 4. `[global_coordinate]` Сообщение с текущими координатами робота
+== 4. `[0x4: global_coordinate]` Сообщение с текущими координатами робота
 #render_packet("ssl0.yaml", "global_coordinate", 0)
 
 
-== 5. `[cap_vel_and_accel]` Ограничение максимальной скорости и ускорения
+== 5. `[0x5: cap_vel_and_accel]` Ограничение максимальной скорости и ускорения
 #render_packet("ssl0.yaml", "cap_vel_and_accel", 0)
 
-== 10. `[debug_override]` Служебные сообщения настройки
+== 10. `[0xA: debug_override]` Служебные сообщения настройки
 
 Для передачи служебных сообщений регламентируется ряд форматов. Все они используют байты полезной нагрузки с 1 по 31, и их описание приведено ниже.
 
@@ -83,6 +83,10 @@ SPbUnited
   - `CAN [1:0C]`
     - `CANFuoco payload format [2:DRV_ID|3:REG_ID|4-12:PAYLOAD]`
 ]
+
+== 15. `[0xF: new_old_format]` Модифицированный пакет старого формата 
+
+#render_packet("ssl0.yaml", "new_old_format", 0)
 
 #pagebreak()
 
