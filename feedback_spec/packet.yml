@@ -1,0 +1,41 @@
+structures:
+  main:
+    bits: 24
+    ranges:
+      23-20:
+        name: Packet ID
+        description: Packet ID = 0x1
+        # values:
+        #   1:
+        #     name: abcd
+      19-16:
+        name: Robot ID
+        description: Robot ID
+      # 15-8:
+      #   name: Ball checker
+      #   structure: ball_checker
+      #   description: ABCD
+      8:
+        name: O
+        description: Outer ball sensor value
+        values:
+          0: no ball
+          1: yes ball
+          
+      9:
+        name: I
+        description: Inner ball sensor value
+        values:
+          0: no ball
+          1: yes ball
+      15-10:
+        name: "Reserved"
+        
+      7-0:
+        name: Voltage
+        description: Battery voltage uint8_t [0.1V]
+  ball_checker:
+    bits: 8
+    ranges:
+      1:
+        name: abcd
